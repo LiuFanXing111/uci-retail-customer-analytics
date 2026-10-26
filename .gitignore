@@ -1,0 +1,23 @@
+# 原始数据与中间缓存放本地，不进版本库
+data/*.xlsx
+data/*.csv
+data/cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Office 临时锁文件
+~$*
+*.tmp
