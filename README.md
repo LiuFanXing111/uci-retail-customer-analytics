@@ -6,6 +6,8 @@
 
 数据集：[UCI Machine Learning Repository · Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii)（CC BY 4.0）
 
+**在线看**：https://liufanxing111.github.io/uci-retail-customer-analytics/ （图表、结论、报告下载都在这一页）
+
 ---
 
 ## 关键结论
@@ -29,33 +31,33 @@
 
 **月度 GMV：季节性主导，年度总量持平**
 
-<img src="figures/fig1_monthly_gmv.png" width="760">
+<img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig1_monthly_gmv.png" width="760">
 
 **取消金额集中度：前 10 张单占四成四**
 
-<img src="figures/fig2_cancel.png" width="640">
+<img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig2_cancel.png" width="640">
 
 **24 个同期群的次月留存：置信区间大面积重叠，没有单调下滑**
 
 这张图推翻了「留存一年掉四分之三」的直觉结论，详见下文「一个被推翻的结论」。
 
-<img src="figures/fig3_cohort_retention.png" width="760">
+<img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig3_cohort_retention.png" width="760">
 
 **同月新增客户：2011 年每个月都低于 2010 年**
 
-<img src="figures/fig4_new_customer.png" width="720">
+<img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig4_new_customer.png" width="720">
 
 **商品营收累计曲线：A 类是千级商品池，不是少数爆款**
 
-<img src="figures/fig5_pareto.png" width="640">
+<img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig5_pareto.png" width="640">
 
 **召回 ROI 敏感性网格**
 
-<img src="figures/fig6_roi_grid.png" width="640">
+<img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig6_roi_grid.png" width="640">
 
 **RFM 七层：人数与营收的错位**
 
-<img src="figures/fig7_rfm.png" width="720">
+<img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig7_rfm.png" width="720">
 
 Tableau 六页仪表盘见 [`dashboard/`](dashboard/)。
 
