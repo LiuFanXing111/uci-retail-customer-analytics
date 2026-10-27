@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UCI Online Retail II · 在线零售经营分析</title>
+<meta name="description" content="107 万行英国在线零售商交易流水：从数据清洗到经营诊断、客户分层、商品结构、召回成本测算的完整分析链路。">
+<style>
+  :root{
+    --bg:#fbfbfc; --card:#ffffff; --ink:#0f1319; --body:#3f4650; --muted:#6b7280;
+    --line:#e5e8ee; --accent:#1f5fd0; --accent-soft:#eaf0fc; --warn:#b8763a;
+    --radius:14px; --maxw:1060px;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1014; --card:#151a21; --ink:#eef1f5; --body:#b6bec9; --muted:#8b94a1;
+      --line:#232a33; --accent:#6ea0ff; --accent-soft:#1a2434; --warn:#d9a262;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--body);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1,h2,h3{color:var(--ink); line-height:1.3; margin:0}
+  h2{font-size:clamp(22px,3vw,29px); letter-spacing:-.2px}
+  h3{font-size:19px}
+  p{margin:0 0 14px}
+
+  /* hero */
+  .hero{padding:76px 0 52px; border-bottom:1px solid var(--line);
+        background:linear-gradient(180deg,var(--accent-soft) 0%,transparent 100%)}
+  .eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase;
+           color:var(--accent); font-weight:600; margin:0 0 18px}
+  .hero h1{font-size:clamp(30px,5.4vw,50px); letter-spacing:-1px; margin:0 0 8px; font-weight:700}
+  .hero h1 span{color:var(--muted); font-weight:400; display:block; font-size:.62em; letter-spacing:0}
+  .lede{font-size:clamp(16px,2vw,18.5px); color:var(--body); max-width:760px; margin:22px 0 0}
+  .lede strong{color:var(--ink); font-weight:600}
+  .tags{display:flex; flex-wrap:wrap; gap:8px; margin:26px 0 0}
+  .tag{font-size:12.5px; padding:5px 11px; border:1px solid var(--line);
+       border-radius:999px; color:var(--muted); background:var(--card)}
+  .actions{display:flex; flex-wrap:wrap; gap:12px; margin:30px 0 0}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:10px;
+       font-size:14.5px; font-weight:600; border:1px solid var(--line); background:var(--card); color:var(--ink)}
+  .btn:hover{text-decoration:none; border-color:var(--muted)}
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+  .btn.primary:hover{opacity:.9}
+
+  /* metrics */
+  .metrics{padding:44px 0 8px}
+  .grid-m{display:grid; grid-template-columns:repeat(auto-fit,minmax(158px,1fr)); gap:14px; margin:0 0 8px}
+  .metric{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 18px 16px}
+  .metric .k{font-size:12.5px; color:var(--muted); margin:0 0 6px}
+  .metric .v{font-size:24px; font-weight:700; color:var(--ink); letter-spacing:-.5px; font-variant-numeric:tabular-nums}
+  .metric .s{font-size:12.5px; color:var(--muted); margin-top:4px}
+
+  /* sections */
+  section{padding:56px 0 8px}
+  .sec-head{margin:0 0 26px; padding-bottom:14px; border-bottom:1px solid var(--line)}
+  .sec-head h2 small{display:block; font-size:13px; font-weight:600; letter-spacing:.12em;
+                     color:var(--accent); text-transform:uppercase; margin-bottom:8px}
+
+  /* findings */
+  .finding{display:grid; grid-template-columns:1fr; gap:16px; margin:0 0 46px}
+  .finding .txt{order:1}
+  .finding .fig{order:2}
+  .finding h3{margin:0 0 8px}
+  .finding h3 em{font-style:normal; color:var(--muted); font-weight:400; font-size:.86em}
+  .finding p{margin:0 0 10px}
+  .finding ul{margin:0 0 0 18px; padding:0}
+  .finding li{margin:0 0 6px}
+  .fig img{width:100%; height:auto; display:block; border:1px solid var(--line);
+           border-radius:10px; background:#fff}
+  .fig figcaption{font-size:12.5px; color:var(--muted); margin-top:9px; line-height:1.6}
+  @media (min-width:820px){
+    .finding{grid-template-columns:minmax(0,1fr) minmax(0,1.45fr); gap:30px; align-items:start}
+    .finding .txt{order:1}
+    .finding .fig{order:2}
+    .finding.flip .txt{order:2}
+    .finding.flip .fig{order:1}
+  }
+
+  /* callout */
+  .callout{background:var(--card); border:1px solid var(--line); border-left:3px solid var(--warn);
+           border-radius:10px; padding:18px 20px; margin:0 0 20px}
+  .callout .lbl{font-size:12.5px; font-weight:700; letter-spacing:.06em; color:var(--warn);
+                text-transform:uppercase; margin:0 0 8px}
+  .callout p:last-child{margin-bottom:0}
+
+  /* table */
+  .tbl{width:100%; border-collapse:collapse; font-size:14.5px; margin:16px 0 20px; background:var(--card)}
+  .tbl th,.tbl td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line)}
+  .tbl th{font-size:12.5px; color:var(--muted); font-weight:600; text-transform:none}
+  .tbl td{color:var(--body); font-variant-numeric:tabular-nums}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl .num{text-align:right}
+
+  /* code */
+  pre{background:var(--card); border:1px solid var(--line); border-radius:10px;
+      padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px;
+      line-height:1.75; color:var(--body); margin:0 0 18px}
+  code{font-family:var(--mono); font-size:.92em}
+  .inline-code{background:var(--accent-soft); padding:1px 6px; border-radius:5px; font-size:.9em; color:var(--ink)}
+
+  /* limits */
+  .limits{list-style:none; margin:0; padding:0; display:grid; gap:12px}
+  .limits li{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 18px; font-size:14.5px}
+  .limits strong{color:var(--ink)}
+
+  footer{border-top:1px solid var(--line); margin-top:60px; padding:34px 0 56px; font-size:13.5px; color:var(--muted)}
+  footer p{margin:0 0 8px}
+  .backtop{position:fixed; right:22px; bottom:22px; width:42px; height:42px; border-radius:50%;
+           border:1px solid var(--line); background:var(--card); color:var(--muted); font-size:17px;
+           display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .backtop:hover{color:var(--ink); text-decoration:none}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">数据分析项目 · 2026</p>
+    <h1>UCI Online Retail II<span>在线零售经营分析</span></h1>
+    <p class="lede">
+      一家英国在线零售商的 25 个月交易流水，<strong>1,067,371 行明细</strong>。从数据清洗走到经营诊断、
+      客户分层、商品结构与召回成本测算，结论全部落在可复核的数字上。
+    </p>
+    <p class="lede" style="margin-top:14px">
+      一句话概括：<strong>这是一门规模稳定、但没有自然增长的生意；收入集中在英国和年末两个月，
+      收缩发生在获客端，而不是留存端。</strong>
+    </p>
+    <div class="tags">
+      <span class="tag">Python / pandas</span>
+      <span class="tag">mlxtend FP-Growth</span>
+      <span class="tag">Tableau</span>
+      <span class="tag">同期群分析</span>
+      <span class="tag">RFM 分层</span>
+      <span class="tag">ABC 分级</span>
+      <span class="tag">假设检验</span>
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="files/UCI_Online_Retail_Analysis_Report.docx">下载完整分析报告</a>
+      <a class="btn" href="https://github.com/LiuFanXing111/uci-retail-customer-analytics">GitHub 仓库与源码</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap metrics">
+  <div class="grid-m">
+    <div class="metric"><p class="k">GMV（25 个月）</p><p class="v">£17.07M</p><p class="s">2010 £822.3 万 → 2011 £817.1 万，−0.6%</p></div>
+    <div class="metric"><p class="k">有效订单</p><p class="v">36,639</p><p class="s">清洗去重后</p></div>
+    <div class="metric"><p class="k">客户数</p><p class="v">5,861</p><p class="s">CustomerID 非空</p></div>
+    <div class="metric"><p class="k">客单价</p><p class="v">£465.98</p><p class="s">GMV / 订单数</p></div>
+    <div class="metric"><p class="k">取消率</p><p class="v">16.64%</p><p class="s">单量口径；金额口径 4.22%</p></div>
+    <div class="metric"><p class="k">滞销 SKU</p><p class="v">1,404</p><p class="s">占 30.4%，只贡献 7.22% GMV</p></div>
+  </div>
+</div>
+
+<section id="findings">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>Findings</small>主要发现</h2>
+    </div>
+
+    <article class="finding">
+      <div class="txt">
+        <h3>季节性主导，年度总量几乎持平</h3>
+        <p>11 月 GMV 比 24 个月均值高 <strong>66.1%</strong>，12 月次之；剔除末期残缺月后，月度区间在
+          <strong>£44 万—£116 万</strong>之间来回摆动，没有趋势线可画。</p>
+        <p>收入集中度也很高：英国占 <strong>83.7%</strong>，10—11 月合计占全年 <strong>26.0%</strong>。
+          这意味着任何一个月的波动，先要看季节位置，再看经营动作。</p>
+      </div>
+      <figure class="fig">
+        <img src="figures/fig1_monthly_gmv.png" alt="月度 GMV 折线图" loading="lazy">
+        <figcaption>图 1　月度 GMV。季节性振幅远大于年度变化幅度。</figcaption>
+      </figure>
+    </article>
+
+    <article class="finding flip">
+      <div class="txt">
+        <h3>取消金额极度集中，均值监控无效</h3>
+        <p>按单量算取消率 <strong>16.64%</strong>，按金额算只有 <strong>4.22%</strong>——金额口径的取消更少见，但更致命。</p>
+        <p>单笔最大取消占取消总额 <strong>23.4%</strong>，Top 10 占 <strong>44.4%</strong>。
+          一笔 £168,470 的订单就能把月度均值拉飞，所以监控必须按单笔阈值设，而不是看偏离均值的百分比。</p>
+      </div>
+      <figure class="fig">
+        <img src="figures/fig2_cancel.png" alt="取消金额集中度" loading="lazy">
+        <figcaption>图 2　取消金额集中度。前 10 张单吃掉四成四。</figcaption>
+      </figure>
+    </article>
+
+    <article class="finding">
+      <div class="txt">
+        <h3>留存没有恶化 <em>——这条是复核后改过来的</em></h3>
+        <p>把客户按首购月份分成 24 个同期群，次月留存加权 <strong>23.1%</strong>。分年看，
+          2010 年 <strong>19.9%</strong>、2011 年 <strong>23.6%</strong>，差 3.72 个百分点、z = 2.81，
+          在 5% 水平上显著。</p>
+        <p>24 个批次的置信区间大面积重叠，没有单调下滑的形态。初版报告里“留存一年掉四分之三”的判断，
+          在复核中被推翻了，过程见下一节。</p>
+      </div>
+      <figure class="fig">
+        <img src="figures/fig3_cohort_retention.png" alt="24 个同期群次月留存气泡图" loading="lazy">
+        <figcaption>图 3　24 个同期群的次月留存。气泡大小为队列人数，须线为 95% 置信区间。</figcaption>
+      </figure>
+    </article>
+
+    <article class="finding flip">
+      <div class="txt">
+        <h3>真正的收缩在获客端</h3>
+        <p>同月新增客户的月均人数，从 <strong>300 人降到 137 人</strong>，降幅 <strong>54.3%</strong>。
+          2011 年 11 个月里，没有一个月高于上年同月。</p>
+        <p>降幅本身在收窄：1 月同比 −81.2%，4—6 月维持在 −56% 至 −64%，9—11 月收窄到 −21% 至 −41%。
+          是持续两年的收缩，但下半年出现了修复迹象。</p>
+      </div>
+      <figure class="fig">
+        <img src="figures/fig4_new_customer.png" alt="同月新增客户对比" loading="lazy">
+        <figcaption>图 4　同月新增客户。2011 年每个月都低于 2010 年同月。</figcaption>
+      </figure>
+    </article>
+
+    <article class="finding">
+      <div class="txt">
+        <h3>商品是长尾，不是爆款</h3>
+        <p><strong>1,003 个 SKU</strong> 贡献 80% 营收，占全部在售 SKU 的两成多；而 Top 10 SKU 只占营收
+          <strong>8.1%</strong>。</p>
+        <p>这个结构决定了运营重心：该管的是千级商品池的可得性与陈列位，而不是押宝几个爆品。
+          同时它也是滞销判断的基础——1,404 个滞销 SKU 里，A 类只有 69 个。</p>
+      </div>
+      <figure class="fig">
+        <img src="figures/fig5_pareto.png" alt="商品营收累计曲线" loading="lazy">
+        <figcaption>图 5　商品营收累计曲线。A 类是一个千级商品池。</figcaption>
+      </figure>
+    </article>
+
+    <article class="finding">
+      <div class="txt">
+        <h3>滞销清退要先分层，不能一刀切</h3>
+        <p>1,404 个滞销 SKU 占全部 SKU 的 <strong>30.4%</strong>，两年却只贡献 <strong>7.22%</strong> GMV。</p>
+        <table class="tbl">
+          <tr><th>分层</th><th class="num">滞销 SKU 数</th><th>占滞销营收</th><th>动作</th></tr>
+          <tr><td>A 类</td><td class="num">69</td><td>39.0%</td><td>先查断货，别误清</td></tr>
+          <tr><td>C 类</td><td class="num">1,103</td><td>仅占 GMV 1.78%</td><td>优先释放陈列位</td></tr>
+        </table>
+        <p>清 C 类伤不到 GMV，但 A 类那 69 个必须先确认是真的卖不动，还是断货缺货造成的「假滞销」。
+          数据里没有进货价，所以毛利、库存资金占用、清仓损失都算不成金额，建议只能停在「释放陈列位」这一层。</p>
+      </div>
+    </article>
+
+    <article class="finding flip">
+      <div class="txt">
+        <h3>客户结构是强二八，但召回名单不能按人数圈</h3>
+        <p>Champions <strong>1,191 人</strong>，占人数 20.3%、贡献营收 <strong>68.8%</strong>；
+          按金额单独排序，前 10% 客户贡献 63.9%，与分层结论互相印证。</p>
+        <p>另一头，At Risk 占人数 36.1%，却只贡献 6.8% 营收。只看人数会得出「三分之一客户要流失」的警报，
+          只看营收又觉得无所谓——两种读法都不对，召回的钱只该花在有历史价值的那一小部分。</p>
+        <p>另外，RFM 与生命周期两套标签高度共线（都由最近购买间隔主导），交叉成矩阵是一条对角线，没有增量信息。
+          有增量的是把历史价值与沉默时长分开看：最高价值档里沉默超过 180 天的只有 <strong>113 人</strong>，
+          这才是值得人工触达的范围，而不是 2,117 人一起发券。</p>
+      </div>
+      <figure class="fig">
+        <img src="figures/fig7_rfm.png" alt="RFM 七层人数与营收对比" loading="lazy">
+        <figcaption>图 6　RFM 七层：人数与营收的错位。</figcaption>
+      </figure>
+    </article>
+
+    <article class="finding">
+      <div class="txt">
+        <h3>召回方案要先测“有没有用”，再谈“划不划算”</h3>
+        <p>把 uplift 假设 × 客单价 × 触达人数 − 券成本摊成一张 4×4 敏感性网格，可以看到：在小幅 uplift
+          下，绝大多数格子是负收益；只有当 uplift 超过一定阈值、券成本压得住，才转正。</p>
+        <p>更关键的是样本量：30 天二次购买基线实测 <strong>22.61%</strong>，在 α=0.05、power=0.8 下，
+          要测出 +3pp 每组需要 <strong>3,188 人</strong>——按月均 137 个新客要跑 46 个月。+10pp 只需
+          <strong>310 人</strong>，两个月能跑完。所以先追大颗粒度改造，再谈小幅优化。</p>
+      </div>
+      <figure class="fig">
+        <img src="figures/fig6_roi_grid.png" alt="召回 ROI 敏感性网格" loading="lazy">
+        <figcaption>图 7　召回 ROI 敏感性网格。uplift 与券成本的二维组合。</figcaption>
+      </figure>
+    </article>
+  </div>
+</section>
+
+<section id="reversal">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>Correction</small>一个被推翻的结论</h2>
+    </div>
+    <p>初版分析的结论是：次月留存从 2009-12 批次的 35.3% 降到 2010-12 批次的 9.2%，<strong>一年掉四分之三</strong>。
+      复核时按批次人数拆开看，这个说法站不住。</p>
+    <table class="tbl">
+      <tr><th>批次</th><th class="num">队列人数</th><th class="num">次月留存</th><th>95% 置信区间</th><th class="num">留存人数</th></tr>
+      <tr><td>2009-12</td><td class="num">952</td><td class="num">35.3%</td><td>32.3% — 38.3%</td><td class="num">336</td></tr>
+      <tr><td>2010-12</td><td class="num">76</td><td class="num">9.2%</td><td>2.7% — 15.7%</td><td class="num">7</td></tr>
+    </table>
+    <div class="callout">
+      <p class="lbl">两端的基数是不可比的</p>
+      <p>2009-12 是数据首月，952 人里有 89 人首单就在 12-01（数据第一天），是商家在数据开始前已积累的存量客户；
+        2010-12 只有 76 人，因为该月圣诞停业、数据止于 12-23，且 9.2% 只对应 7 个人，一个人的增减就能让这个数摆动
+        1.3 个百分点。用首单金额四档做直接标准化后，构成效应只解释 <strong>−2.21 个百分点</strong>，剩下的缺口
+        全部来自基数不可比，不是客户行为的变化。</p>
+    </div>
+    <p>剔除规则最后定成一条：<strong>只看次月的观察窗是否完整，不看结果好不好看</strong>。2011-11 的次月是 2011-12，
+      而该月数据止于 12-09，观察窗只有 9 天；2011-12 则根本没有次月。这两批剔掉，2010-12 因为次月是完整的 2011-01，
+      保留在样本里。若把它也剔掉做敏感性分析，结论方向不变（20.1% vs 23.6%，z = 2.61）。</p>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>Method</small>方法与口径</h2>
+    </div>
+    <h3 style="margin-bottom:14px">清洗链条</h3>
+<pre>原始 1,067,371 行（两个 sheet 合并）
+  → 保留 Quantity &gt; 0 且 Price &gt; 0     剔除退货与零负价
+  → 剔除 CustomerID 为空              留存/客户结构类指标的分母
+  → 按七列去重                        两表在 2010-12-01~09 重叠，1,088 张发票
+  → 剔除非商品编码                    POST / BANK CHARGES / AMAZONFEE / Manual / DOT 等
+= 有效订单 36,639 ／ 客户 5,861 ／ GMV £17,073,078</pre>
+
+    <h3 style="margin:26px 0 10px">用到的方法</h3>
+    <ul style="margin:0 0 18px 18px; padding:0">
+      <li><strong>同期群留存</strong>：按首购月份分 24 个队列，二项分布正态近似算 95% 置信区间；用直接标准化做构成分解。</li>
+      <li><strong>RFM 七层分层</strong>：R / F / M 三维打分后按业务规则切分，再与生命周期阶段交叉验证。</li>
+      <li><strong>ABC 分级</strong>：按 SKU 营收累计曲线切 80% / 15% / 5%，叠加动销状态识别滞销。</li>
+      <li><strong>FP-Growth 关联规则</strong>：mlxtend，支持度筛选后保留 50 条（实为 25 组正反各一条），补算覆盖订单数约 23.2%。</li>
+      <li><strong>召回成本收益测算</strong>：uplift 假设 × 客单价 × 触达人数 − 券成本，做 4×4 敏感性网格。</li>
+      <li><strong>实验样本量反推</strong>：按两比例检验反推每组所需人数，检验“跑一个月看效果”是否可行。</li>
+    </ul>
+
+    <h3 style="margin:26px 0 10px">两个统计上的坑</h3>
+    <div class="callout" style="border-left-color:var(--accent)">
+      <p class="lbl" style="color:var(--accent)">取消金额不能看月度均值</p>
+      <p>2011-12 只有 9 天数据，这 9 天取消金额有 17.4 万英镑，其中 97% 来自同一笔订单（单笔 £168,470）。
+        一笔大额取消就能把月均值拉飞，监控要按单笔阈值设。</p>
+    </div>
+    <div class="callout" style="border-left-color:var(--accent)">
+      <p class="lbl" style="color:var(--accent)">“跑一个月按实际分布校准”站不住</p>
+      <p>30 天二次购买率基线 22.61%（首单后有完整 30 天观察窗的 5,691 人中有 1,287 人复购）。
+        定向召回方案只有 430 人，连 5pp 都测不出来。这条建议因此改成先追大颗粒度改造。</p>
+    </div>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2><small>Limits</small>局限</h2>
+    </div>
+    <ul class="limits">
+      <li><strong>没有成本数据。</strong>数据里没有进货价，毛利、库存资金占用、清仓损失都算不成金额。</li>
+      <li><strong>没有活动标记。</strong>无法识别促销期，也无法做真实的 A/B 复盘，所有 uplift 都是假设而非实测。</li>
+      <li><strong>RFM 分箱规则有两套。</strong>报告用业务分箱（Champions 1,191 人），脚本用 qcut 等频分箱（1,282 人），差异已注明。</li>
+      <li><strong>关联规则的置信度不等于增量。</strong>买 A 的人买 B 的概率高，不代表推荐 B 就能提升转化。</li>
+      <li><strong>观察期偏短。</strong>25 个月只够看到一个完整年度周期，季节性结论需要第三年数据验证。</li>
+      <li><strong>已知的口径差。</strong>脚本复现的 GMV 为 £17,072,526，与报告正文相差 £551.54（0.0032%），来自非商品编码清单的取舍，留在明面上而非糊过去。</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>数据来源：Chen, D. (2015). <em>Online Retail II</em>. UCI Machine Learning Repository.
+       DOI: 10.24432/C5CG6D，CC BY 4.0。</p>
+    <p>分析代码与复现步骤：<a href="https://github.com/LiuFanXing111/uci-retail-customer-analytics">github.com/LiuFanXing111/uci-retail-customer-analytics</a></p>
+  </div>
+</footer>
+
+<a class="backtop" href="#" aria-label="回到顶部">↑</a>
+
+</body>
+</html>
