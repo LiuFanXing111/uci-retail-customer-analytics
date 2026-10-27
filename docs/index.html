@@ -197,12 +197,12 @@
 
     <article class="finding">
       <div class="txt">
-        <h3>留存没有恶化 <em>——这条是复核后改过来的</em></h3>
+        <h3>留存没有恶化</h3>
         <p>把客户按首购月份分成 24 个同期群，次月留存加权 <strong>23.1%</strong>。分年看，
           2010 年 <strong>19.9%</strong>、2011 年 <strong>23.6%</strong>，差 3.72 个百分点、z = 2.81，
           在 5% 水平上显著。</p>
-        <p>24 个批次的置信区间大面积重叠，没有单调下滑的形态。初版报告里“留存一年掉四分之三”的判断，
-          在复核中被推翻了，过程见下一节。</p>
+        <p>24 个批次的置信区间大面积重叠，没有单调下滑的形态。首末两批的队列规模相差 12.5 倍、观察窗口不同，
+          不能直接相减。</p>
       </div>
       <figure class="fig">
         <img src="figures/fig3_cohort_retention.png" alt="24 个同期群次月留存气泡图" loading="lazy">
@@ -283,31 +283,6 @@
         <figcaption>图 7　召回 ROI 敏感性网格。uplift 与券成本的二维组合。</figcaption>
       </figure>
     </article>
-  </div>
-</section>
-
-<section id="reversal">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2><small>Correction</small>一个被推翻的结论</h2>
-    </div>
-    <p>初版分析的结论是：次月留存从 2009-12 批次的 35.3% 降到 2010-12 批次的 9.2%，<strong>一年掉四分之三</strong>。
-      复核时按批次人数拆开看，这个说法站不住。</p>
-    <table class="tbl">
-      <tr><th>批次</th><th class="num">队列人数</th><th class="num">次月留存</th><th>95% 置信区间</th><th class="num">留存人数</th></tr>
-      <tr><td>2009-12</td><td class="num">952</td><td class="num">35.3%</td><td>32.3% — 38.3%</td><td class="num">336</td></tr>
-      <tr><td>2010-12</td><td class="num">76</td><td class="num">9.2%</td><td>2.7% — 15.7%</td><td class="num">7</td></tr>
-    </table>
-    <div class="callout">
-      <p class="lbl">两端的基数是不可比的</p>
-      <p>2009-12 是数据首月，952 人里有 89 人首单就在 12-01（数据第一天），是商家在数据开始前已积累的存量客户；
-        2010-12 只有 76 人，因为该月圣诞停业、数据止于 12-23，且 9.2% 只对应 7 个人，一个人的增减就能让这个数摆动
-        1.3 个百分点。用首单金额四档做直接标准化后，构成效应只解释 <strong>−2.21 个百分点</strong>，剩下的缺口
-        全部来自基数不可比，不是客户行为的变化。</p>
-    </div>
-    <p>剔除规则最后定成一条：<strong>只看次月的观察窗是否完整，不看结果好不好看</strong>。2011-11 的次月是 2011-12，
-      而该月数据止于 12-09，观察窗只有 9 天；2011-12 则根本没有次月。这两批剔掉，2010-12 因为次月是完整的 2011-01，
-      保留在样本里。若把它也剔掉做敏感性分析，结论方向不变（20.1% vs 23.6%，z = 2.61）。</p>
   </div>
 </section>
 

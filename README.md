@@ -39,8 +39,6 @@
 
 **24 个同期群的次月留存：置信区间大面积重叠，没有单调下滑**
 
-这张图推翻了「留存一年掉四分之三」的直觉结论，详见下文「一个被推翻的结论」。
-
 <img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig3_cohort_retention.png" width="760">
 
 **同月新增客户：2011 年每个月都低于 2010 年**
@@ -60,25 +58,6 @@
 <img src="https://liufanxing111.github.io/uci-retail-customer-analytics/figures/fig7_rfm.png" width="720">
 
 Tableau 六页仪表盘见 [`dashboard/`](dashboard/)。
-
----
-
-## 一个被推翻的结论
-
-初版分析写的是「次月留存从 2009-12 批次的 35.3% 降到 2010-12 批次的 9.2%，一年掉四分之三」。复核时按批次人数拆开看，这个说法不成立：
-
-| 批次 | 人数 | 次月留存 | 95% 置信区间 | 留存人数 |
-|---|---|---|---|---|
-| 2009-12 | 952 | 35.3% | 32.3% — 38.3% | 336 |
-| 2010-12 | 76 | 9.2% | 2.7% — 15.7% | 7 |
-
-两端不可比。2010-12 批次只有 76 人，因为数据止于 2011-12-09，这个批次只有 9 天的观察窗口，且多数是回头客而非纯新客；9.2% 只对应 7 个人，置信区间宽达 13 个百分点。而 2009-12 是数据首月，含商家在数据开始前已积累的客户。
-
-把 24 个批次全部算上，2010 年各批在 15.7%—25.9% 之间，2011 年在 14.1%—31.7% 之间，没有下滑趋势。按年加权后，2011 年反而略高于 2010 年。
-
-构成效应（按 2010 年批次结构做直接标准化）只解释了 −2.21 个百分点，缺口全部来自基数不可比。**真正的变化在获客：同月新增客户从月均 300 人降到 137 人。**
-
-这段复核过程留在 [`src/check_retention.py`](src/check_retention.py)，可以复现。
 
 ---
 
@@ -178,3 +157,7 @@ python src/draw.py && python src/redraw.py
 ## 数据来源
 
 Chen, D. (2015). *Online Retail II* [Dataset]. UCI Machine Learning Repository. DOI: [10.24432/C5CG6D](https://doi.org/10.24432/C5CG6D). CC BY 4.0.
+
+---
+
+**在线看版**：https://liufanxing111.github.io/uci-retail-customer-analytics/ —— 图表、结论与完整报告都在这一页
